@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.3
 // @description  Translate YouTube search queries from Portuguese to English
-// @author       Your Name
+// @author       Kauan
 // @match        *://www.youtube.com/results?search_query=*
 // @grant        none
 // @run-at       document-end
@@ -11,8 +11,6 @@
 
 (function() {
     'use strict';
-
-    console.log("YouTube Search Translator script started.");
 
     // Function to translate text from Portuguese to English using Google Translate API
     async function translateText(text) {
@@ -53,16 +51,6 @@
     // Run the main function
     handleTranslation();
 })();
-
-// ==UserScript==
-// @name         YouTube Reload on Search
-// @namespace    http://tampermonkey.net/
-// @version      1.1
-// @description  Recarrega a página quando o botão de pesquisa do YouTube é clicado ou ENTER é pressionado, com atraso de 1.5 segundos
-// @author       Seu Nome
-// @match        *://www.youtube.com/*
-// @grant        none
-// ==/UserScript==
 
 (function() {
     'use strict';
