@@ -1,0 +1,85 @@
+// ==UserScript==
+// @name         Traduzir Pesquisa do YouTube para Inglês (Auto) kakalol
+// @namespace    https://yourdomain.com
+// @version      2.1
+// @description  Tradução automática de buscas no YouTube para inglês em tempo real
+// @author       Você
+// @match        *://www.youtube.com/*
+// @grant        none
+// @run-at       document-start
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const API_URL = 'https://api.mymemory.translated.net/get?q=';
+    let isTranslating = false;
+
+    // Configuração do MutationObserver
+    const observerConfig = {
+        childList: true,
+        subtree: true
+    };
+
+    function translateQuery(query, callback) {
+        if (!query || isTranslating) return;
+
+        isTranslating = true;
+        fetch(`${API_URL}${encodeURIComponent(query)}&langpair=pt|en`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.responseData) {
+                    callback(data.responseData.translatedText);
+                }
+            })
+            .catch(error => console.error('Erro ao traduzir:', error))
+            .finally(() => isTranslating = false);
+    }
+
+    function updateSearch(query) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('search_query', query);
+
+        // Atualização suave para SPAs
+        history.replaceState(history.state, '', newUrl.toString());
+
+        // Disparar evento de pesquisa
+        window.dispatchEvent(new Event('yt-navigate-finish'));
+
+        // Novo: Reload após 500ms
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 500);
+    }
+
+    function handleNavigation() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentQuery = urlParams.get('search_query');
+
+        if (!currentQuery || sessionStorage.getItem('translated') === currentQuery) return;
+
+        translateQuery(currentQuery, translated => {
+            sessionStorage.setItem('translated', translated);
+            updateSearch(translated);
+        });
+    }
+
+    // Observar mudanças na DOM
+    const observer = new MutationObserver(mutations => {
+        if (window.location.href.includes('/results')) {
+            handleNavigation();
+        }
+    });
+
+    // Iniciar observação
+    observer.observe(document, observerConfig);
+
+    // Monitorar eventos de navegação do YouTube
+    window.addEventListener('yt-navigate-start', handleNavigation);
+    window.addEventListener('yt-navigate-finish', handleNavigation);
+
+    // Verificar na carga inicial
+    if (window.location.href.includes('/results')) {
+        handleNavigation();
+    }
+})();
